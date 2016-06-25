@@ -1,0 +1,43 @@
+---
+- hosts: master-nodes
+  gather_facts: false
+  vars:
+    - pdns_api_host: 127.0.0.1
+    - pdns_master_zones:
+        - 128.28.172.in-addr.arpa
+        - prod.vagrant.local
+        - test.vagrant.local
+        - vagrant.local
+    - pdns_nameservers:
+        - 172.28.128.3
+        - 172.28.128.4
+        - 172.28.128.5
+    - pdns_soa: 'node0.{{ pri_domain_name }} hostmaster.{{ pri_domain_name }} 0 10800 3600 604800 3600'
+    - pri_domain_name: vagrant.local
+  tasks:
+    - name: create master zones
+      pdns_zone:
+        name: "{{ item }}"
+        action: master
+        api_host: "{{ pdns_api_host }}"
+        soa: "{{ pdns_soa }}"
+        nsset: "{{ pdns_nameservers| join (',') }}"
+      with_items: '{{ pdns_master_zones }}'
+
+- hosts: slave-nodes
+  gather_facts: false
+  vars:
+    - pdns_master_zones:
+        - 128.28.172.in-addr.arpa
+        - prod.vagrant.local
+        - test.vagrant.local
+        - vagrant.local
+    - pdns_masters:
+        - 172.28.128.3
+  tasks:
+    - name: create slave zones
+      pdns_zone:
+        zone: "{{ item }}"
+        action: slave
+        masters: "{{ pdns_masters|join (',') }}"
+      with_items: '{{ pdns_master_zones }}'
