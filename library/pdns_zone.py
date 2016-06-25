@@ -258,8 +258,8 @@ def zone_add_slave(module, base_url, zone, masters, comment):
     payload = json.dumps(data)
 
     response, info = fetch_url(module, base_url, data=payload, headers=headers, method='POST')
-    if info['status'] != 200:
-        module.fail_json(msg="failed to create slave zone %s at %s: %s" % (zone, base_url, info['msg']))
+#    if info['status'] != 200:
+#        module.fail_json(msg="failed to create slave zone %s at %s: %s" % (zone, base_url, info['msg']))
 
     return True
 
@@ -309,8 +309,8 @@ def zone_add_master(module, base_url, zone, soa_rdata, ns_rrset, comment, ttl=60
     payload = json.dumps(data)
 
     response, info = fetch_url(module, base_url, data=payload, headers=headers, method='POST')
-    if info['status'] != 200:
-        module.fail_json(msg="failed to create master zone %s at %s: %s" % (zone, base_url, info['msg']))
+#    if info['status'] != 200:
+#        module.fail_json(msg="failed to create master zone %s at %s: %s" % (zone, base_url, info['msg']))
 
     return True
 
