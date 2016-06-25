@@ -119,12 +119,12 @@ notes:
 author: Jan-Piet Mens
 '''
 
-EXAMPLES='''
+EXAMPLES = '''
 - name: Create a slave zone; obtain config from specific file
   action: pdns_zone zone="example.org"
             action=slave
             masters="127.0.0.2:5301"
-            pdnsconf={{pdnsconf}}
+            pdnsconf={{ pdnsconf }}
 
 - name: Delete all zones (master or slave) contained in the "zonelist" file
   action: pdns_zone zone={{ item }}
@@ -150,7 +150,7 @@ headers = {
 }
 api_host = None
 api_port = None
-api_key  = None
+api_key = None
 
 # ==============================================================
 def read_pdns_conf(path='/etc/powerdns/pdns.conf'):
@@ -240,7 +240,7 @@ def zone_add_slave(module, base_url, zone, masters, comment):
         return False
 
     if kind == 'MASTER' or kind == 'NATIVE':
-        module.fail_json( msg="zone %s is %s. Cannot convert to slave" % (zone, kind))
+        module.fail_json(msg="zone %s is %s. Cannot convert to slave" % (zone, kind))
 
     masters = masters.split(',')
 
@@ -249,11 +249,11 @@ def zone_add_slave(module, base_url, zone, masters, comment):
         'masters'   : masters,
         'name'      : zone,
         'comments'      : [{
-                            'name'  : zone,
-                            'type'  : 'SOA',
-                            'account' : '',
-                            'content' : comment,
-                          }],
+            'name'  : zone,
+            'type'  : 'SOA',
+            'account' : '',
+            'content' : comment,
+        }],
     }
     payload = json.dumps(data)
 
@@ -271,21 +271,21 @@ def zone_add_master(module, base_url, zone, soa_rdata, ns_rrset, comment, ttl=60
         return False
 
     if kind == 'SLAVE' or kind == 'NATIVE':
-        module.fail_json( msg="zone %s is %s. Cannot convert to master" % (zone, kind))
+        module.fail_json(msg="zone %s is %s. Cannot convert to master" % (zone, kind))
 
     records = []
     data = {
         'kind'          : 'Master',
-        'masters'       : [ ],
+        'masters'       : [],
         'name'          : zone,
         'nameservers'   : [],   # I'm creating records "manually" below to avoid automatic TTL=3600
         'records'       : records,
         'comments'      : [{
-                            'name'  : zone,
-                            'type'  : 'SOA',
-                            'account' : '',
-                            'content' : comment,
-                          }],
+            'name'  : zone,
+            'type'  : 'SOA',
+            'account' : '',
+            'content' : comment,
+        }],
     }
 
     records.append({
@@ -327,38 +327,38 @@ def main():
 
     argument_spec = url_argument_spec()
     argument_spec.update(
-        pdnsconf = dict(required=False, default='/etc/powerdns/pdns.conf'),
-        api_key  = dict(required=False),
-        api_host = dict(required=False),
-        api_port = dict(required=False, type='int'),
-        zone     = dict(required=False, default=None, aliases=['name', 'domain']),
-        action   = dict(required=True, choices=['list', 'master', 'slave', 'delete']),
-        masters  = dict(required=False),
-        soa      = dict(required=False),
-        nsset    = dict(required=False),
-        comment  = dict(required=False, default='Ansible-managed'),
-        ttl      = dict(required=False, type='int', default=86400)
+        pdnsconf=dict(required=False,default='/etc/powerdns/pdns.conf'),
+        api_key=dict(required=False),
+        api_host=dict(required=False),
+        api_port=dict(required=False, type='int'),
+        zone=dict(required=False, default=None, aliases=['name', 'domain']),
+        action=dict(required=True, choices=['list', 'master', 'slave', 'delete']),
+        masters=dict(required=False),
+        soa=dict(required=False),
+        nsset=dict(required=False),
+        comment=dict(required=False, default='Ansible-managed'),
+        ttl=dict(required=False, type='int', default=86400)
 
     )
 
     module = AnsibleModule(
-        argument_spec = argument_spec,
+        argument_spec=argument_spec,
     )
 
     # Read default pdns.conf for defaults; allow module args
     # to override those
     read_pdns_conf(path=module.params['pdnsconf'])
 
-    api_key   = module.params['api_key'] if module.params['api_key'] else api_key
-    api_host  = module.params['api_host'] if module.params['api_host'] else api_host
-    api_port  = module.params['api_port'] if module.params['api_port'] else api_port
-    zone      = module.params['zone']
-    masters   = module.params['masters']
-    action    = module.params['action']
-    soa       = module.params['soa']
-    nsset     = module.params['nsset']
-    comment   = module.params['comment']
-    ttl       = module.params['ttl']
+    api_key = module.params['api_key'] if module.params['api_key'] else api_key
+    api_host = module.params['api_host'] if module.params['api_host'] else api_host
+    api_port = module.params['api_port'] if module.params['api_port'] else api_port
+    zone = module.params['zone']
+    masters = module.params['masters']
+    action = module.params['action']
+    soa = module.params['soa']
+    nsset = module.params['nsset']
+    comment = module.params['comment']
+    ttl = module.params['ttl']
 
     base_url = 'http://{0}:{1}/servers/localhost/zones'.format(api_host, api_port)
     headers['X-API-Key'] = api_key
@@ -366,19 +366,19 @@ def main():
     if api_host is None or api_key is None or api_port is None:
         module.fail_json(msg="Zone %s requires api_host, api_key, api_port" % (zone))
 
-    changed=True
+    changed = True
 
     if action == 'master':
         if soa is None:
-            module.fail_json( msg="Master zone %s requires SOA" % (zone))
+            module.fail_json(msg="Master zone %s requires SOA" % (zone))
         if nsset is None:
-            module.fail_json( msg="Master zone %s requires NS set" % (zone))
+            module.fail_json(msg="Master zone %s requires NS set" % (zone))
 
         changed = zone_add_master(module, base_url, zone, soa, nsset, comment, ttl)
 
     if action == 'slave':
         if masters is None:
-            module.fail_json( msg="Slave zone %s requires masters" % (zone))
+            module.fail_json(msg="Slave zone %s requires masters" % (zone))
 
         changed = zone_add_slave(module, base_url, zone, masters, comment)
 
